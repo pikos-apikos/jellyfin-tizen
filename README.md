@@ -122,3 +122,24 @@ tizen package -t wgt -o . -- .buildResult
    tizen install -n Jellyfin.wgt -t UE65NU7400
    ```
    > Specify target with `-t` option. Use `sdb devices` to list them.
+
+## Troubleshooting
+
+### "Unable to connect" when signing in against a Jellyfin 12.x server
+
+If the app connects and lists users but signing in fails ("Unable to connect" /
+"failed to connect, make sure the server is on"), and the server log shows
+`System.ArgumentNullException: Value cannot be null. (Parameter 'request.App')`,
+the client is older than 10.9 and authenticates with the legacy
+`X-Emby-Authorization` header. Jellyfin 12.x reads the standard `Authorization`
+header first and only honors the legacy header when `EnableLegacyAuthorization`
+is enabled — a 12.x migration disables it by default.
+
+Fix (either one):
+- **Server:** set `<EnableLegacyAuthorization>true</EnableLegacyAuthorization>` in
+  `system.xml` (Jellyfin 12.x) or `config.xml` (older), then restart the server.
+- **Client:** build against a `release-10.9.z` (or newer) web branch, which sends
+  the standard `Authorization` header.
+
+Related: [jellyfin/jellyfin#15962](https://github.com/jellyfin/jellyfin/issues/15962),
+[seerr-team/seerr#2361](https://github.com/seerr-team/seerr/issues/2361).
